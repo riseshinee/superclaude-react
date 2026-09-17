@@ -1,31 +1,35 @@
 # SuperClaude React
 
-[English](README.md) | **한국어**
+[English](README.md) | 한국어
 
-[SuperClaude Framework](https://github.com/SuperClaude-Org/SuperClaude_Framework)를 모델로 만든 React 전용 [Claude Code](https://claude.com/claude-code) 스킬·에이전트 모음입니다.
-어떤 React 프로젝트에든 복사해 넣으면 Claude가 스택(Next.js, Vite, CRA, Remix, React Native 등)을 감지하고 그 프로젝트의 관례를 따라 작업합니다.
+React 프로젝트에서 바로 쓸 수 있게 만든 Claude Code 스킬 모음입니다.
 
-- **스킬 6개** — SuperClaude 핵심 명령(`/sc:implement`, `/sc:analyze`, `/sc:improve`, `/sc:test`, `/sc:troubleshoot`)을 React용으로 재작성 + 공통 스택 감지 스킬
-- **에이전트 3개** — SuperClaude 페르소나를 Claude Code 서브에이전트로 구성 (아키텍트, QA, 보안)
-- **스택 감지** — 모든 스킬이 먼저 실행하는 의존성 없는 스크립트. 일반론이 아니라 프로젝트에 맞는 결과를 냄
-- **MCP 가이드** — Context7, Playwright 설정
+[SuperClaude Framework](https://github.com/SuperClaude-Org/SuperClaude_Framework)의 명령어와 페르소나 구조가 마음에 들었는데, 범용이다 보니 React 작업에서는 매번 "우리 프로젝트는 Next.js App Router고, 상태는 zustand, 테스트는 vitest야" 같은 설명을 다시 해야 했습니다. 그래서 React에 필요한 것만 추려서 다시 만들었습니다.
 
-> 스킬 본문은 전 세계 개발자가 쓸 수 있도록 영어로 작성되어 있습니다. 한국어로 요청해도 정상적으로 동작하며, Claude는 요청한 언어로 답합니다.
+스킬을 실행하면 먼저 `package.json`과 설정 파일을 읽어 프로젝트 스택을 파악하고, 그다음 기존 코드의 관례에 맞춰 작업합니다. Next.js, Vite, CRA, Remix, React Native 모두 동작합니다.
 
-## 빠른 시작
+## 설치
 
-```bash
+저장소를 받은 뒤, 적용할 프로젝트 경로를 넘겨서 설치 스크립트를 실행하면 됩니다.
+
+```powershell
 git clone https://github.com/<your-org>/superclaude-react.git
 cd superclaude-react
 
-# macOS / Linux / WSL / Git Bash
-./install.sh ~/work/my-react-app --with-mcp
+# Windows
+.\install.ps1 C:\work\my-app -WithMcp
 
-# Windows PowerShell
-.\install.ps1 C:\work\my-react-app -WithMcp
+# macOS / Linux / WSL
+./install.sh ~/work/my-app --with-mcp
 ```
 
-프로젝트에서 Claude Code를 열고:
+프로젝트의 `.claude/` 폴더에 스킬과 에이전트가 복사됩니다. 이 폴더를 커밋해 두면 팀원들은 따로 설치할 필요가 없습니다.
+
+내 PC의 모든 프로젝트에서 쓰고 싶다면 경로 대신 `-Global`(bash는 `--global`)을 주면 `~/.claude`에 설치됩니다.
+
+## 사용법
+
+프로젝트에서 Claude Code를 열고 슬래시 명령으로 호출합니다.
 
 ```
 /react-analyze src
@@ -33,113 +37,119 @@ cd superclaude-react
 /react-troubleshoot "OrderTable에서 Maximum update depth exceeded 에러"
 ```
 
-슬래시 명령 없이 *"LoginForm 테스트 작성해줘"* 처럼 자연어로 요청해도 해당 스킬(`react-test`)이 자동으로 선택됩니다.
+명령어를 외울 필요는 없습니다. "LoginForm 테스트 좀 짜줘"라고만 해도 알아서 `react-test`가 선택됩니다. 스킬 본문은 해외 개발자도 쓸 수 있게 영어로 썼지만, 한국어로 요청하면 한국어로 답합니다.
 
 ## 스킬
 
-| 스킬 | SuperClaude | 역할 |
-|---|---|---|
-| `react-stack` | — | 프레임워크, React 버전, 상태·스타일·테스트 도구, 구조, 실행 명령 감지. 다른 모든 스킬이 먼저 사용 |
-| `react-implement` | `/sc:implement` | 감지된 관례에 맞춰 기능·컴포넌트·훅 구현, typecheck/lint/test로 검증 |
-| `react-analyze` | `/sc:analyze` | 품질·아키텍처·성능·보안·접근성 리포트 (파일:라인 근거). 코드 수정 안 함 |
-| `react-improve` | `/sc:improve` | 동작 보존 리팩터링: 불필요한 effect 제거, 훅 추출, 컴포넌트 분리, 상태 구조 정리 |
-| `react-test` | `/sc:test` | Testing Library, MSW, Playwright/Cypress 등 프로젝트 도구로 동작 중심 테스트 |
-| `react-troubleshoot` | `/sc:troubleshoot` | 재현 → 원인 확정 → 수정 → 검증. React 증상 사전 포함 |
-
-### 플래그
-
-스킬은 SuperClaude 스타일 플래그를 인자로 받습니다.
-
-| 플래그 | 스킬 | 효과 |
-|---|---|---|
-| `--focus <영역>` | analyze | 범위 한정 (quality, architecture, performance, security, a11y) |
-| `--depth deep` | analyze | 영역별로 페르소나 에이전트에 병렬 위임 |
-| `--safe` | implement, improve | 계획 먼저 승인 / 리팩터링 전 특성화 테스트 추가 |
-| `--with-tests` | implement | 테스트 함께 작성 |
-| `--preview` | improve | 코드 수정 없이 계획만 제시 |
-| `--fix` | troubleshoot | 원인 확정 후 바로 수정 |
-
-전체 목록은 각 `skills/<name>/SKILL.md`를 참고하세요.
-
-## 에이전트 (페르소나)
-
-| 에이전트 | SuperClaude 페르소나 | 용도 |
-|---|---|---|
-| `react-architect` | architect / frontend | 구조, 상태 전략, 서버/클라이언트 경계, 설계·리팩터링 검토 |
-| `react-qa` | qa | 테스트 전략, 회귀 위험, flaky 테스트 |
-| `react-security` | security | XSS, 비밀값 노출, 토큰 저장, RSC/Server Action 유출 |
-
-스킬이 필요할 때 에이전트에 위임하며(예: `react-analyze --depth deep`), 직접 호출할 수도 있습니다: *"react-architect 에이전트로 이 설계 검토해줘"*
-
-## MCP 서버 (선택, 권장)
-
-| 서버 | 개선되는 점 |
+| 스킬 | 하는 일 |
 |---|---|
-| Context7 | 구현 시 버전에 맞는 라이브러리 문서 참조 |
-| Playwright | 실제 브라우저로 E2E 흐름 탐색, UI 버그 재현 |
+| `react-implement` | 기능, 컴포넌트, 훅 구현. 끝나면 타입 체크, 린트, 테스트까지 돌려봅니다 |
+| `react-analyze` | 코드 품질, 구조, 성능, 보안, 접근성을 점검하고 파일:라인 단위로 리포트합니다. 코드는 건드리지 않습니다 |
+| `react-improve` | 동작은 그대로 두고 리팩터링합니다. 불필요한 useEffect 제거, 훅 추출, 컴포넌트 분리 같은 작업입니다 |
+| `react-test` | 프로젝트에 있는 도구(Vitest, Jest, Testing Library, MSW, Playwright 등)로 테스트를 작성하고 실행합니다 |
+| `react-troubleshoot` | 버그를 재현하고, 원인을 확인한 다음에 고칩니다. 추측으로 이것저것 바꾸지 않게 해뒀습니다 |
+| `react-markup` | 퍼블리셔가 준 HTML/CSS/jQuery 파일을 React 컴포넌트로 옮깁니다. 아래에서 따로 설명합니다 |
+| `react-stack` | 스택 감지용입니다. 다른 스킬이 알아서 먼저 호출하니 직접 쓸 일은 거의 없습니다 |
 
-`--with-mcp` / `-WithMcp`는 프로젝트에 `.mcp.json`을 생성합니다(기존 파일은 덮어쓰지 않음. PowerShell 설치기는 Windows에 필요한 `cmd /c` 래퍼를 자동 추가). 수동 설정은 [mcp/README.md](mcp/README.md) 참고.
+앞의 다섯 개는 SuperClaude의 `/sc:implement`, `/sc:analyze`, `/sc:improve`, `/sc:test`, `/sc:troubleshoot`에 대응합니다.
+
+SuperClaude처럼 플래그도 받습니다. 자주 쓰는 것만 적으면 이 정도입니다.
+
+- `react-analyze --focus performance`: 특정 영역만 점검
+- `react-analyze --depth deep`: 영역별로 에이전트를 나눠서 깊게 분석
+- `react-improve --preview`: 바로 고치지 않고 계획만 보여줌
+- `react-implement --safe`: 기존 파일을 수정하기 전에 먼저 확인을 받음
+- `react-troubleshoot --fix`: 원인이 확인되면 수정까지 진행
+
+나머지는 각 스킬의 `skills/<이름>/SKILL.md`에 있습니다.
+
+## 퍼블리싱 파일을 React로 옮기기
+
+퍼블리셔가 HTML과 CSS를 넘겨주고 개발자가 React로 붙이는 작업을 자주 하다 보니 따로 스킬을 만들었습니다. 원칙은 **퍼블리셔가 짠 마크업과 CSS는 건드리지 않는다**는 것입니다. 클래스명도 그대로 두고, jQuery로 붙어 있던 동작만 React state로 다시 구현합니다.
+
+```
+/react-markup ./publish-src
+```
+
+이렇게 요청하면 산출물 전체를 훑어서 공통 헤더/푸터, 반복되는 카드 구조, 사용 중인 플러그인, 깨진 이미지 경로를 먼저 정리해 보여줍니다. 그다음 컴포넌트 구성안을 확인받고 변환을 시작합니다. 퍼블리셔가 수정본을 보내면 `--update`를 붙여 바뀐 부분만 반영할 수 있습니다.
+
+변환에 쓰는 스크립트는 Claude 없이도 돌아갑니다(Node 18 이상, 의존성 없음).
+
+```bash
+# 산출물 분석
+node .claude/skills/react-markup/scripts/scan-markup.mjs ./publish-src
+
+# 헤더만 뽑아서 컴포넌트 파일로 저장
+node .claude/skills/react-markup/scripts/html-to-jsx.mjs ./publish-src/html/main.html \
+  --select header.header --component Header --asset-base /publish --root ./publish-src \
+  --out src/components/Header.tsx
+```
+
+Git Bash에서 `--asset-base /publish`처럼 `/`로 시작하는 값을 넘기면 Windows 경로로 바뀌어 버립니다. 이럴 땐 명령 앞에 `MSYS_NO_PATHCONV=1`을 붙이세요. PowerShell에서는 괜찮습니다.
+
+진행 과정, 옵션 전체, 퍼블리셔에게 공유할 체크리스트, 자주 생기는 문제는 [사용 가이드](docs/react-markup.ko.md)에 정리해 두었습니다.
+
+## 에이전트
+
+SuperClaude의 페르소나 중 React 작업에서 실제로 자주 필요했던 세 개만 서브에이전트로 넣었습니다.
+
+- `react-architect`: 폴더 구조, 상태 관리 방식, 서버/클라이언트 경계 같은 설계 검토
+- `react-qa`: 무엇을 어떤 수준에서 테스트할지, 변경의 회귀 위험이 어느 정도인지
+- `react-security`: XSS, 클라이언트 번들에 노출된 비밀값, 토큰 저장 방식 등
+
+스킬이 필요할 때 알아서 호출하고, "react-architect 에이전트로 이 구조 검토해줘"처럼 직접 불러도 됩니다.
+
+## MCP 연동 (선택)
+
+없어도 동작하지만, 아래 두 개를 연결해 두면 결과가 확실히 좋아집니다.
+
+- **Context7**: 설치된 라이브러리 버전에 맞는 문서를 찾아봅니다. 버전마다 API가 달라서 생기는 실수가 줄어듭니다.
+- **Playwright**: 실제 브라우저를 띄워 UI 버그를 재현하고, E2E 테스트 흐름을 확인하고, 퍼블리싱 원본과 React 화면을 비교합니다.
+
+설치할 때 `-WithMcp`(`--with-mcp`)를 주면 프로젝트에 `.mcp.json`이 만들어집니다. 이미 파일이 있으면 덮어쓰지 않습니다. 직접 설정하는 방법은 [mcp/README.md](mcp/README.md)를 보세요.
 
 ## 설치 옵션
 
 | bash | PowerShell | 설명 |
 |---|---|---|
-| `[TARGET_DIR]` | `[-Target] <dir>` | 설치할 프로젝트 (기본: 현재 디렉터리) |
-| `--global` | `-Global` | `~/.claude`에 설치해 모든 프로젝트에서 사용 |
-| `--skills a,b` | `-Skills a,b` | 일부 스킬만 설치 (`react-` 접두사 생략 가능, `react-stack`은 항상 포함) |
-| `--no-agents` | `-NoAgents` | 에이전트 제외 |
+| `[경로]` | `[-Target] <경로>` | 설치할 프로젝트. 생략하면 현재 폴더 |
+| `--global` | `-Global` | `~/.claude`에 설치 |
+| `--skills a,b` | `-Skills a,b` | 원하는 스킬만 설치. `react-` 접두사는 생략 가능 |
+| `--no-agents` | `-NoAgents` | 에이전트는 빼고 설치 |
 | `--with-mcp` | `-WithMcp` | `.mcp.json` 생성 |
-| `--force` | `-Force` | 기존 스킬/에이전트 덮어쓰기 (업데이트 시 사용) |
-| `--uninstall` | `-Uninstall` | 이 저장소가 배포한 파일만 제거 |
-| `--dry-run` | `-DryRun` | 변경 없이 수행 내용만 출력 |
+| `--force` | `-Force` | 이미 있는 파일 덮어쓰기 |
+| `--uninstall` | `-Uninstall` | 이 저장소가 설치한 파일만 제거 |
+| `--dry-run` | `-DryRun` | 실제로 바꾸지 않고 무엇을 할지만 출력 |
 
-**프로젝트 설치 vs 전역 설치:** `.claude/`를 커밋하면 팀 전체가 같은 버전의 스킬을 프로젝트별로 고정해 사용할 수 있습니다. 개인적으로 모든 프로젝트에서 쓰려면 `--global`을 사용하세요.
+업데이트는 이 저장소에서 `git pull` 한 다음 `--force`로 다시 설치하면 됩니다.
 
-**업데이트:** 이 저장소에서 `git pull` 후 `--force`로 설치기를 다시 실행합니다.
+## 팀 규칙 넣기
 
-## 팀에 맞게 커스터마이즈
+스킬은 전부 평범한 마크다운 파일이라, 설치된 `.claude/skills/`를 열어 고치면 바로 반영됩니다. 팀 컨벤션("export는 named로", "API 훅은 `features/*/api`에" 같은 것)은 `react-stack/SKILL.md`에 적어두는 걸 추천합니다. 모든 스킬이 이 파일을 먼저 읽기 때문입니다.
 
-스킬은 일반 Markdown 파일입니다. 설치된 `.claude/skills/` 사본을 수정해 팀 규칙을 반영하세요.
-
-- `react-stack/SKILL.md`에 팀 관례 추가 (예: "항상 named export", "API 훅은 `features/*/api`에 위치")
-- `react-stack/references/frameworks.md`에 스택별 규칙 추가
-
-프로젝트의 `CLAUDE.md`와 lint 설정은 항상 스킬의 일반 가이드보다 우선합니다.
+참고로 프로젝트에 `CLAUDE.md`나 린트 규칙이 있으면 스킬에 적힌 일반적인 가이드보다 그쪽을 우선합니다.
 
 ## 저장소 구조
 
 ```
 superclaude-react/
-├── skills/
-│   ├── react-stack/          # scripts/detect-stack.mjs, references/frameworks.md
-│   ├── react-implement/
-│   ├── react-analyze/
-│   ├── react-improve/
-│   ├── react-test/
-│   └── react-troubleshoot/
-├── agents/                   # react-architect, react-qa, react-security
-├── mcp/                      # mcp.example.json, README.md
-├── scripts/validate.mjs      # 구조·frontmatter·참조 검사
+├── skills/        스킬 7개 (react-markup에는 변환 스크립트 포함)
+├── agents/        서브에이전트 3개
+├── docs/          react-markup 사용 가이드
+├── mcp/           MCP 설정 예시
+├── scripts/       validate.mjs
 ├── install.sh
 └── install.ps1
 ```
 
-## 기여하기
+## 기여
 
-1. 배포되는 콘텐츠(`skills/`, `agents/`, `mcp/`)는 영어로 작성합니다.
-2. `SKILL.md`는 500줄 이하로 유지하고, 상세 내용은 `references/`로 분리합니다.
-3. 커밋 전 `node scripts/validate.mjs`를 실행합니다 (frontmatter, 이름, 참조 파일, 언어 검사).
-4. 감지기는 실제 프로젝트로 테스트합니다: `node skills/react-stack/scripts/detect-stack.mjs <path>`
+스킬을 고치거나 추가할 때 몇 가지만 지켜주세요.
 
-## 요구 사항
-
-- Claude Code
-- Node.js 18+ (스택 감지 스크립트, MCP 서버)
-
-## 감사의 말
-
-구조와 명령/페르소나 개념은 [SuperClaude Framework](https://github.com/SuperClaude-Org/SuperClaude_Framework)에서 가져왔습니다. 이 프로젝트는 SuperClaude 및 Anthropic과 무관한 독립 프로젝트입니다.
+- `skills/`, `agents/`, `mcp/` 안의 내용은 영어로 씁니다. README와 가이드 문서는 한국어판을 따로 둡니다.
+- `SKILL.md`가 500줄을 넘으면 세부 내용은 `references/`로 분리합니다.
+- 커밋 전에 `node scripts/validate.mjs`를 돌려주세요. 파일 형식, 참조 경로, 언어를 검사합니다.
 
 ## 라이선스
 
-[MIT](LICENSE)
+[MIT](LICENSE). 구조와 아이디어는 SuperClaude Framework에서 가져왔지만, 이 저장소는 SuperClaude나 Anthropic과 관계없는 개인 프로젝트입니다.
