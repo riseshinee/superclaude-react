@@ -16,7 +16,7 @@ Symptom: `$ARGUMENTS`
 
 ## Behavioral Flow
 
-1. **Detect** — Confirm the stack with `react-stack` (React version and framework matter for diagnosis).
+1. **Detect** — Confirm the stack with `react-stack` (React version and framework matter for diagnosis). Then get a fresh `react-map` and use it to locate code, following its token budget rules.
 2. **Reproduce** — Get the full error, stack trace, and repro path. Where possible:
    - Build/type/test errors → run the command yourself
    - Runtime/UI bugs → use **Playwright MCP** to inspect console logs and network

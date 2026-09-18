@@ -17,7 +17,7 @@ Target: `$ARGUMENTS`
 
 ## Behavioral Flow
 
-1. **Detect** — Confirm the stack with `react-stack`.
+1. **Detect** — Confirm the stack with `react-stack`. Then get a fresh `react-map` and use it to locate code, following its token budget rules. Fan-in (`←N`) shows how far a change reaches.
 2. **Baseline** — Find and run tests related to the target; record the current pass state. If there are no tests and the change is large, recommend `--safe` or tell the user.
 3. **Diagnose** — Pick the applicable recipes below and present a short change plan.
 4. **Refactor** — Make small steps, each of which can be verified to preserve behavior.

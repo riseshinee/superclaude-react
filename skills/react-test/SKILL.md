@@ -19,7 +19,7 @@ Target: `$ARGUMENTS`
 
 ## Behavioral Flow
 
-1. **Detect** — Use `react-stack` to find the test runner, config, and commands. If no test tooling exists, don't write tests — propose a setup first (Vite→Vitest, Next→Vitest or Jest).
+1. **Detect** — Use `react-stack` to find the test runner, config, and commands. If no test tooling exists, don't write tests — propose a setup first (Vite→Vitest, Next→Vitest or Jest). Then get a fresh `react-map` and use it to locate code, following its token budget rules. Lines without ` T` are components with no colocated test.
 2. **Learn conventions** — Read 2 existing tests; follow their location (colocated / `__tests__`), render helpers (`renderWithProviders`, …), and mocking style.
 3. **Decide what to test** — List user-facing behaviors first: rendered output, interactions, loading/error/empty states, edge cases.
 4. **Write** — Follow the principles below.

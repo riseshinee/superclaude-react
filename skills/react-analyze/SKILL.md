@@ -17,8 +17,8 @@ Target: `$ARGUMENTS` (defaults to all of `src/`)
 
 ## Behavioral Flow
 
-1. **Detect** — Confirm the stack with `react-stack`.
-2. **Map** — Folder structure, route list, largest component files (top 10 by line count), dependency direction.
+1. **Detect** — Confirm the stack with `react-stack`. Then get a fresh `react-map` and use it to locate code, following its token budget rules.
+2. **Map** — Folder structure, route list, largest component files (top 10 by line count), dependency direction. The map's `## Routes` and `## Hotspots` sections cover most of this.
 3. **Scan** — Use Grep with the checklist below to find candidates, then read those files to **confirm each issue is real**. Never report raw grep hits.
 4. **Deep (optional)** — With `--depth deep`, delegate areas in parallel: architecture/performance→`react-architect`, security→`react-security`, test gaps→`react-qa`.
 5. **Report** — Output in the format below.

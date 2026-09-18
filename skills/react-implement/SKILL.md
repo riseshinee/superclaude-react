@@ -18,8 +18,8 @@ Request: `$ARGUMENTS`
 
 ## Behavioral Flow
 
-1. **Detect** — Use the `react-stack` skill to learn the stack and conventions (skip if already done this session).
-2. **Locate** — Find a similar existing feature and use it as the pattern to copy: folder placement, data fetching, error/loading handling, styling approach.
+1. **Detect** — Use the `react-stack` skill to learn the stack and conventions (skip if already done this session). Then get a fresh `react-map` and use it to locate code, following its token budget rules.
+2. **Locate** — Find a similar existing feature (grep the map by name or tag, then read one file) and use it as the pattern to copy: folder placement, data fetching, error/loading handling, styling approach.
 3. **Plan** — Split the work: types/schemas → data layer (API, query hooks) → state → UI components → route wiring → tests. If 3+ files change, share a short plan first.
 4. **Implement** — Follow the principles below.
 5. **Validate** — Run the detected `typecheck` → `lint` → related `test` commands. Fix failures and re-run. State explicitly if a command could not be run.
