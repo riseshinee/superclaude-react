@@ -49,6 +49,7 @@ cd superclaude-react
 | `react-test` | 프로젝트에 있는 도구(Vitest, Jest, Testing Library, MSW, Playwright 등)로 테스트를 작성하고 실행합니다 |
 | `react-troubleshoot` | 버그를 재현하고, 원인을 확인한 다음에 고칩니다. 추측으로 이것저것 바꾸지 않게 해뒀습니다 |
 | `react-markup` | 퍼블리셔가 준 HTML/CSS/jQuery 파일을 React 컴포넌트로 옮깁니다. 아래에서 따로 설명합니다 |
+| `react-map` | 코드베이스를 파일당 한 줄로 요약한 인덱스를 캐시해 두고, 스킬들이 소스 트리를 읽는 대신 이 파일을 검색하게 합니다. 모든 스킬이 따르는 토큰 절약 규칙도 여기 있습니다. 아래에서 따로 설명합니다 |
 | `react-stack` | 스택 감지용입니다. 다른 스킬이 알아서 먼저 호출하니 직접 쓸 일은 거의 없습니다 |
 
 앞의 다섯 개는 SuperClaude의 `/sc:implement`, `/sc:analyze`, `/sc:improve`, `/sc:test`, `/sc:troubleshoot`에 대응합니다.
@@ -88,6 +89,25 @@ node .claude/skills/react-markup/scripts/html-to-jsx.mjs ./publish-src/html/main
 Git Bash에서 `--asset-base /publish`처럼 `/`로 시작하는 값을 넘기면 Windows 경로로 바뀌어 버립니다. 이럴 땐 명령 앞에 `MSYS_NO_PATHCONV=1`을 붙이세요. PowerShell에서는 괜찮습니다.
 
 진행 과정, 옵션 전체, 퍼블리셔에게 공유할 체크리스트, 자주 생기는 문제는 [사용 가이드](docs/react-markup.ko.md)에 정리해 두었습니다.
+
+## 토큰 절약
+
+React 작업에서 토큰은 대부분 탐색에 쓰입니다. 뭐가 어디 있는지 찾으려고 폴더를 훑고 파일을 열어보는 과정입니다. `react-map`은 이걸 한 번만 해서 `.claude/cache/react-map.md`에 파일당 한 줄로 적어둡니다.
+
+```
+OrderTable.tsx 184 · OrderTable(d) · client query · ←3 T
+```
+
+줄 수, export, 태그(`client`, `store`, `query` 등), 이 파일을 import하는 파일 수, 옆에 테스트가 있는지가 들어갑니다. 라우트 목록과 가장 많이 import되는 파일, 가장 큰 파일은 맨 위에 정리됩니다. 다른 스킬은 이 파일부터 검색하고, 실제로 필요한 파일만 엽니다. 소스가 바뀌었을 때만 다시 만들기 때문에 세션이 바뀌어도 그대로 재사용됩니다.
+
+그 밖에 모든 스킬이 따르는 규칙도 이 스킬에 있습니다. 파일은 통째로 읽지 말고 필요한 줄 범위만 읽기, 같은 파일 다시 읽지 않기, 관련된 테스트만 돌리기, 긴 명령 출력은 잘라서 보기, 여러 파일을 훑는 작업은 서브에이전트에 넘기기 같은 것들입니다.
+
+```bash
+node .claude/skills/react-map/scripts/build-map.mjs          # 생성/갱신
+node .claude/skills/react-map/scripts/build-map.mjs --check  # 최신이면 exit 0
+```
+
+`.gitignore`에 `.claude/cache/`를 추가해 두세요.
 
 ## 에이전트
 
@@ -133,7 +153,7 @@ SuperClaude의 페르소나 중 React 작업에서 실제로 자주 필요했던
 
 ```
 superclaude-react/
-├── skills/        스킬 7개 (react-markup에는 변환 스크립트 포함)
+├── skills/        스킬 8개 (react-markup, react-map에는 스크립트 포함)
 ├── agents/        서브에이전트 3개
 ├── docs/          react-markup 사용 가이드
 ├── mcp/           MCP 설정 예시

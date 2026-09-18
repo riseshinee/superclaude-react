@@ -49,6 +49,7 @@ You don't have to remember the names. Asking "write tests for LoginForm" picks `
 | `react-test` | Writes and runs tests with whatever the project already uses (Vitest, Jest, Testing Library, MSW, Playwright) |
 | `react-troubleshoot` | Reproduces the bug and confirms the cause before fixing it, instead of trying things at random |
 | `react-markup` | Moves a publisher's HTML/CSS/jQuery files into React components. More on this below |
+| `react-map` | Caches a one-line-per-file index of the codebase so skills grep it instead of reading the tree. Also sets token-saving rules for every skill. More on this below |
 | `react-stack` | Stack detection. The other skills call it first, so you rarely need it directly |
 
 The first five map to SuperClaude's `/sc:implement`, `/sc:analyze`, `/sc:improve`, `/sc:test`, and `/sc:troubleshoot`.
@@ -88,6 +89,25 @@ node .claude/skills/react-markup/scripts/html-to-jsx.mjs ./publish-src/html/main
 One gotcha on Windows: Git Bash turns arguments that start with `/` (like `--asset-base /publish`) into Windows paths. Prefix the command with `MSYS_NO_PATHCONV=1`. PowerShell doesn't have this problem.
 
 The [usage guide](docs/react-markup.md) covers the full walkthrough, every option, a checklist to share with publishers, and common problems.
+
+## Saving tokens
+
+Most of the tokens in a React task go into exploring: globbing folders and opening files just to find where things are. `react-map` does that once and writes `.claude/cache/react-map.md`, with one line per file:
+
+```
+OrderTable.tsx 184 · OrderTable(d) · client query · ←3 T
+```
+
+That's the line count, exports, tags (`client`, `store`, `query`, ...), how many files import it, and whether it has a colocated test. Routes and the most imported and largest files are listed at the top. The other skills grep this file first and open only the files they actually need. The map is rebuilt only when source files change, so it carries over between sessions.
+
+The skill also sets rules the other skills follow: read files by line range instead of whole, don't re-read files, run only the related tests, trim long command output, and hand sweeps across many files to a sub-agent.
+
+```bash
+node .claude/skills/react-map/scripts/build-map.mjs          # build/refresh
+node .claude/skills/react-map/scripts/build-map.mjs --check  # exit 0 if fresh
+```
+
+Add `.claude/cache/` to `.gitignore`.
 
 ## Agents
 
@@ -133,7 +153,7 @@ If your project has a `CLAUDE.md` or lint rules, those win over the general guid
 
 ```
 superclaude-react/
-├── skills/        7 skills (react-markup includes the conversion scripts)
+├── skills/        8 skills (react-markup and react-map include scripts)
 ├── agents/        3 subagents
 ├── docs/          react-markup usage guide
 ├── mcp/           MCP config example
